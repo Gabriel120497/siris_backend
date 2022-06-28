@@ -27,10 +27,11 @@ class JwtAuth {
         //Generar el Token
         if ($signup) {
             $token = array(
-                'sub' => $user->id_usuario,
+                'sub' => $user->id,
                 'correo' => $user->correo,
+                'rol' => $user->rol,
                 'iat' => time(),
-                'exp' => time() + 30
+                'exp' => time() + 3000
             );
 
             $jwt = JWT::encode($token, $this->key, 'HS256');

@@ -28,19 +28,9 @@ class ReservaController extends Controller {
         return response()->json($data, $data['code']);
     }
 
-    public function reservasPorId($id, $tipo) {
+    public function reservasPorId($id) {
 
-        switch ($tipo) {
-            case 'Instrumento':
-                $reservas = Reserva::where('id_instrumento', $id)->get();
-                break;
-            case 'Salon':
-                $reservas = Reserva::where('id_salon', $id)->get();
-                break;
-            case 'Equipo':
-                $reservas = Reserva::where('id_equipo', $id)->get();
-                break;
-        }
+        $reservas = Reserva::where('id', $id)->first();
 
         if (is_object($reservas)) {
             $data = array(
@@ -52,7 +42,7 @@ class ReservaController extends Controller {
             $data = array(
                 'code' => 404,
                 'status' => 'error',
-                'message' => "el $tipo no tiene reservas"
+                'message' => "No existe la reserva con id: $id"
             );
         }
         return response()->json($data, $data['code']);

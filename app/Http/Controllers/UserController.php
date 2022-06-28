@@ -39,10 +39,23 @@ class UserController extends Controller {
         $jwtAuth = new \JwtAuth();
         $checkToken = $jwtAuth->checkToken($token);
         if ($checkToken) {
-            echo "Login Correcto";
+            $json = $request->input('json', null);
+            $param_array = json_decode($json, true);//array
+            $user = $jwtAuth->checkToken($token, true);
+
+            //validar datos
+            $validate = \Validator::make($param_array, [
+                'nombre' => 'required|alpha',
+                'correo' => 'required|email|unique:users' . $user->sub,
+                'rol' => 'required'
+            ]);
         } else {
-            echo "Login Incorrecto";
+            $data = array(
+                'status' => 'error',
+                'code' => 400,
+                'message' => 'El usuario no se ha identificado correctamente'
+            );
         }
-        die();
+        return response()->json($data, $data['code']);
     }
 }
