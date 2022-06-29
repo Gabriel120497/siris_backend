@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Grupo_Usuario extends Model {
     protected $table = "grupos_usuarios";
+    protected $fillable = ['estado_usuario'];
 
     public function groups() {
         return $this->belongsTo('App\Grupo', 'id_grupo');

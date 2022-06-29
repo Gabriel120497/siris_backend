@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 use App\Salon;
 
@@ -17,6 +16,44 @@ class SalonController extends Controller {
             'status'=> 'sucess',
             'salones'=> $salones
         ]);
+    }
+
+    public function nuevoSalon(Request $request) {
+        $json = $request->getContent();
+
+        $params = json_decode($json);
+        $params_array = json_decode($json, true);
+
+        if (!empty($params_array)) {
+            $validate = \Validator::make($params_array, [
+                'ubicacion' => 'required|unique:salones'
+            ]);
+
+            if ($validate->fails()) {
+                $data = [
+                    'code' => 400,
+                    'status' => 'error',
+                    'message' => $validate->errors()
+                ];
+            } else {
+                $salon = new Salon();
+                $salon->ubicacion = $params->ubicacion;
+                $salon->save();
+
+                $data = [
+                    'code' => 200,
+                    'status' => 'success',
+                    'salon' => $salon
+                ];
+            }
+        } else {
+            $data = [
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'No se ha creado el equipo, cuerpo malformado'
+            ];
+        }
+        return response()->json($data, $data['code']);
     }
 
     public function salonPorUbicacion($ubicacion) {
