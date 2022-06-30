@@ -8,7 +8,13 @@ use Illuminate\Http\Request;
 class GrupoController extends Controller {
 
     public function grupos() {
+
         $grupos = Grupo::all();
+        if (!empty($grupos)){
+            foreach ($grupos as &$grupo){
+                $grupo->horario = json_decode($grupo->horario);
+            }
+        }
         return response()->json([
             'code' => 200,
             'status' => 'sucess',
@@ -24,7 +30,7 @@ class GrupoController extends Controller {
 
         if (!empty($params_array)) {
             $validate = \Validator::make($params_array, [
-                'nombre' => 'required',
+                'nombre' => 'required|unique:grupos',
                 'profesor' => 'required',
                 'cupos_totales' => 'required',
                 'cupos_restantes' => 'required',

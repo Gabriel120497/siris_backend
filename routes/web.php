@@ -20,6 +20,9 @@ Route::get('usuario/pruebas', 'UserController@prueba');
 //rutas usuario
 Route::post('api/login', 'UserController@login');
 Route::post('api/usuario/update', 'UserController@update');
+Route::post('api/usuario/nuevoUsuario', 'UserController@nuevoUsuario');
+Route::post('api/usuario/enviarCorreoPwd', 'UserController@enviarCorreoPwd');
+Route::get('api/usuario/profesores', 'UserController@profesores');
 
 //rutas reservas
 Route::get('api/reservas', 'ReservaController@reservas');
