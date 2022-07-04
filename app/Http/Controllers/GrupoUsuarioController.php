@@ -22,18 +22,31 @@ class GrupoUsuarioController extends Controller {
         ]);
     }
 
-    public function audicionesPendientes() {
+    public function audicionesPendientes(Request $request) {
+        $profesor = $request->nombre;
         $audicionesPendientes = Grupo_Usuario::join('grupos', 'grupos_usuarios.id_grupo', '=', 'grupos.id')
             ->join('usuarios', 'grupos_usuarios.id_usuario', '=', 'usuarios.id')
             ->select('grupos_usuarios.id', 'grupos_usuarios.estado_usuario',
                 'grupos.nombre as grupo', 'usuarios.nombre', 'usuarios.apellido', 'usuarios.correo',
-                'usuarios.celular')->where('grupos_usuarios.estado_usuario', '=', 'Pendiente');
+                'usuarios.celular')
+            ->where('grupos_usuarios.estado_usuario', '=', 'Pendiente')
+            ->where('grupos.profesor', '=', $profesor)->get();
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'sucess',
-            'audiciones' => $audicionesPendientes
-        ]);
+        if (!empty($audicionesPendientes) && count($audicionesPendientes)) {
+            $data = [
+                'code' => 200,
+                'status' => 'sucess',
+                'audiciones' => $audicionesPendientes
+            ];
+        } else {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'No hay audiciones pendientes'
+            ];
+        }
+
+        return response()->json($data, $data['code']);
     }
 
     public function nuevaAudicion(Request $request) {

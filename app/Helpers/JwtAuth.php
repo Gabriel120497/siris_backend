@@ -30,6 +30,7 @@ class JwtAuth {
                 'sub' => $user->id,
                 'correo' => $user->correo,
                 'rol' => $user->rol,
+                'nombre' =>$user->nombre.' '.$user->apellido,
                 'iat' => time(),
                 'exp' => time() + 3000
             );

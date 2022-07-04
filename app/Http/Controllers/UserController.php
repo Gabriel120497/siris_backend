@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Usuario;
+use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller {
+
+    public $key;
+
+    public function __construct() {
+        $this->key = 'C9fBxl1EWtYTL1/M8jfstw==';
+    }
 
     public function login(Request $request) {
         $jwtAuth = new \JwtAuth();
@@ -86,6 +93,7 @@ class UserController extends Controller {
                 ];
             } else {
                 $pwd = str_random(8);
+                $jwt = JWT::encode($pwd, $this->key, 'HS256');
                 $usuario = new Usuario();
                 $usuario->rol = $params->rol;
                 $usuario->nombre = $params->nombre;
@@ -94,7 +102,7 @@ class UserController extends Controller {
                 $usuario->numero_documento = $params->numero_documento;
                 $usuario->celular = $params->celular;
                 $usuario->correo = $params->correo;
-                $usuario->clave = openssl_encrypt($pwd, 'aes-256-cbc', 'jTl7WNRV', false, base64_decode("C9fBxl1EWtYTL1/M8jfstw=="));
+                $usuario->clave = $jwt;
                 $usuario->save();
                 unset($usuario->clave);
                 $data = [
@@ -140,7 +148,7 @@ class UserController extends Controller {
                 //print_r($usuario);
                 //die();
                 if (!empty($usuario)) {
-                    $clave = openssl_decrypt($usuario[0]->clave, 'aes-256-cbc', 'jTl7WNRV', false, base64_decode("C9fBxl1EWtYTL1/M8jfstw=="));
+                    $clave = JWT::decode($usuario[0]->clave, $this->key, ['HS256']);
                     $data = [
                         'code' => 200,
                         'status' => 'success',
@@ -176,7 +184,7 @@ class UserController extends Controller {
                 'status' => 'sucess',
                 'profesores' => $profesores
             );
-        }else{
+        } else {
             $data = array(
                 'code' => 400,
                 'status' => 'error',

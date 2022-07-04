@@ -29,7 +29,6 @@ class InstrumentoController extends Controller {
             $validate = \Validator::make($params_array, [
                 'placa' => 'required|unique:instrumentos',
                 'nombre' => 'required',
-                'tipo' => 'required',
                 'estado' => 'required',
                 'estatus' => 'required',
                 'trasladable' => 'required'
@@ -45,7 +44,6 @@ class InstrumentoController extends Controller {
                 $instrumento = new Instrumento();
                 $instrumento->placa = $params->placa;
                 $instrumento->nombre = $params->nombre;
-                $instrumento->tipo = $params->tipo;
                 $instrumento->estado = $params->estado;
                 $instrumento->descripcion_estado = $params->descripcion_estado;
                 $instrumento->estatus = $params->estatus;
@@ -69,46 +67,12 @@ class InstrumentoController extends Controller {
         return response()->json($data, $data['code']);
     }
 
-    public function instrumentosDisponibles(Request $request) {
-        $json = $request->getContent();
-
-        $params = json_decode($json);
-        $params_array = json_decode($json, true);
-
+    public function instrumentosDisponibles() {
+        $instrumetosLista = Instrumento::select('nombre')->distinct()->where('estatus', 'Disponible')
+            ->where('habilitado_para', 'Comunidad')->get();
         $data = array(
-            'code' => 400,
-            'status' => 'error',
-            'message' => "Cuerpo Malformado"
+            'instrumentos' => $instrumetosLista,
         );
-
-        if (!empty($params_array)) {
-            $validate = \Validator::make($params_array, [
-                'fecha_inicio' => 'required',
-                'fecha_fin' => 'required'
-            ]);
-
-            if ($validate->fails()) {
-                $data['errors'] = $validate->errors();
-                return response()->json($data, $data['code']);
-            }
-
-            $instrumetosInventario = Instrumento::select('nombre', DB::raw('count(*) as total'))
-                ->where('estatus', '<>', 'Deshabilitado')
-                ->groupBy('nombre')
-                ->get();
-
-            $instrumetosPrestados = Reserva::join('instrumentos', 'reservas.id_instrumento', '=', 'instrumentos.id')
-                ->select('reservas.fecha_inicio', 'reservas.fecha_fin', 'instrumentos.nombre', DB::raw('count(*) as total'))
-                ->where('reservas.fecha_inicio', '=', $params->fecha_inicio)
-                ->where('reservas.fecha_fin', '=', $params->fecha_fin)
-                ->groupBy('instrumentos.nombre')
-                ->get();
-
-            $data = array(
-                'inventario' => $instrumetosInventario,
-                'prestados' => $instrumetosPrestados,
-            );
-        }
         //var_dump($instrumetosInventario);die();
         return response()->json($data);
     }
