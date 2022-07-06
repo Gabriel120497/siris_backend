@@ -34,7 +34,7 @@ class UserController extends Controller {
                 'errors' => $validate->errors()
             );
         } else {
-            $pwd = hash('sha256', $params->clave);
+            $pwd = JWT::encode($params->clave, $this->key, 'HS256');
             $signup = $jwtAuth->signup($params->correo, $pwd);
             if (!empty($params->gettoken)) {
                 $signup = $jwtAuth->signup($params->correo, $pwd, true);
@@ -191,6 +191,6 @@ class UserController extends Controller {
                 'message' => 'No hay profesores'
             );
         }
-        return response()->json($data);
+        return response()->json($data, $data['code']);
     }
 }

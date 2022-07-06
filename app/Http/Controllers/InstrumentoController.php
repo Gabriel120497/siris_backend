@@ -115,4 +115,42 @@ class InstrumentoController extends Controller {
         }
         return response()->json($data, $data['code']);
     }
+
+    public function actualizarInstrumento(Request $request) {
+
+        $json = $request->getContent();
+        $params = json_decode($json);
+        $params_array = json_decode($json, true);
+
+        $data = array(
+            'code' => 400,
+            'status' => 'error',
+            'message' => "Cuerpo Malformado"
+        );
+
+        if (!empty($params_array)) {
+            $validate = \Validator::make($params_array, [
+                'placa' => 'required',
+            ]);
+
+            if ($validate->fails()) {
+                $data['errors'] = $validate->errors();
+                return response()->json($data, $data['code']);
+            }
+
+            unset($params_array['id']);
+            unset($params_array['placa']);
+            $instrumento = Instrumento::where('placa', $params->placa)->first();
+            if (!empty($instrumento) && is_object($instrumento)) {
+                $instrumento->update($params_array);
+                $data = array(
+                    'code' => 200,
+                    'status' => 'sucess',
+                    'instrumento' => $instrumento,
+                    'cambios' => $params_array
+                );
+            }
+        }
+        return response()->json($data, $data['code']);
+    }
 }

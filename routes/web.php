@@ -27,7 +27,8 @@ Route::get('api/usuario/profesores', 'UserController@profesores');
 //rutas reservas
 Route::get('api/reservas', 'ReservaController@reservas');
 Route::get('api/reservas/{id}', 'ReservaController@reservasPorId');
-Route::post('api/reservas/nueva', 'ReservaController@nuevaReserva');
+Route::post('api/nuevaReserva', 'ReservaController@nuevaReserva');
+//Route::post('api/correo', 'ReservaController@enviarCorreoReserva');
 
 Route::get('api/reservas/{estado}', 'ReservaController@reservas');
 
@@ -43,6 +44,7 @@ Route::get('api/instrumentosComunidad', 'InstrumentoController@instrumentosComun
 Route::get('api/instrumentosDisponibles', 'InstrumentoController@instrumentosDisponibles');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 Route::put('api/deshabilitarInstrumento', 'InstrumentoController@deshabilitarInstrumento');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 Route::post('api/nuevoInstrumento', 'InstrumentoController@nuevoInstrumento');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
+Route::put('api/actualizarInstrumento', 'InstrumentoController@actualizarInstrumento');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 
 //rutas salones
 Route::get('api/salones', 'SalonController@salones');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
@@ -53,6 +55,9 @@ Route::post('api/nuevoSalon', 'SalonController@nuevoSalon');//->middleware(\App\
 Route::get('api/grupos', 'GrupoController@grupos');
 Route::post('api/nuevoGrupo', 'GrupoController@nuevoGrupo');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 Route::get('api/estudiantes/{idGrupo}', 'GrupoController@estudiantes');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
+Route::get('api/misGrupos/{profesor}', 'GrupoController@misGrupos');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
+Route::delete('api/eliminarGrupo/{id_grupo}', 'GrupoController@eliminarGrupo');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
+Route::put('api/actualizarGrupo', 'GrupoController@actualizarGrupo');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 
 //Audiciones
 Route::get('api/audiciones', 'GrupoUsuarioController@audiciones');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);

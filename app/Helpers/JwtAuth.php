@@ -11,7 +11,7 @@ class JwtAuth {
     public $key;
 
     public function __construct() {
-        $this->key = '123456789';//cambiar clave por una mas segura
+        $this->key = 'C9fBxl1EWtYTL1/M8jfstw==';//cambiar clave por una mas segura
     }
 
     public function signup($email, $password, $getToken = null) {
