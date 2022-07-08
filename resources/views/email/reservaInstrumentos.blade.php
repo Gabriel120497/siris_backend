@@ -5,12 +5,12 @@
 </head>
 
 <body>
-<h2>Correo estado reserva</h2>
 <div>Su reserva :
     <ol>
         <li>Id: {!! $id !!}</li>
-        <li>fecha y hora inicial : {!! $fecha_inicio !!}</li>
-        <li>fecha y hora final : {!! $fecha_fin !!}</li>
+        <li>{!! $tipo_item !!}: {!! $item !!}</li>
+        <li>fecha y hora inicial (AAAA-MM-DD): {!! $fecha_inicio !!}</li>
+        <li>fecha y hora final (AAAA-MM-DD): {!! $fecha_fin !!}</li>
         <li>Estado : {!! $estado !!}</li>
     </ol>
 </div>

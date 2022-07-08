@@ -26,8 +26,12 @@ Route::get('api/usuario/profesores', 'UserController@profesores');
 
 //rutas reservas
 Route::get('api/reservas', 'ReservaController@reservas');
+Route::get('api/reservas/reservasAprobadas', 'ReservaController@reservasAprobadas');
+Route::get('api/reservas/reservasActivas', 'ReservaController@reservasActivas');
+Route::get('api/reservas/reservasPendientes', 'ReservaController@reservasPendientes');
 Route::get('api/reservas/{id}', 'ReservaController@reservasPorId');
 Route::post('api/nuevaReserva', 'ReservaController@nuevaReserva');
+Route::put('api/activarReserva', 'ReservaController@activarReserva');
 //Route::post('api/correo', 'ReservaController@enviarCorreoReserva');
 
 Route::get('api/reservas/{estado}', 'ReservaController@reservas');
@@ -50,6 +54,7 @@ Route::put('api/actualizarInstrumento', 'InstrumentoController@actualizarInstrum
 Route::get('api/salones', 'SalonController@salones');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 Route::get('api/salones/{id}', 'SalonController@salonPorUbicacion')->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 Route::post('api/nuevoSalon', 'SalonController@nuevoSalon');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
+Route::delete('api/eliminarSalon/{id_salon}', 'SalonController@eliminarSalon');//->middleware(\App\Http\Middleware\ApiAuthMiddleware::class);
 
 //Grupos
 Route::get('api/grupos', 'GrupoController@grupos');

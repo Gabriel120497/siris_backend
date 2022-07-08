@@ -94,7 +94,9 @@ class ReservaController extends Controller {
                         'status' => 'success',
                         'reserva' => $reserva
                     ];
-                    $this->enviarCorreoReserva($reserva);
+                    $reserva->tipo_item = $params->tipo_item;
+                    $reserva->item = $params->item;
+                    $this->enviarCorreoReserva($reserva, $params->tipo_item, $params->item);
                 } else {
                     $data = [
                         'code' => 400,
@@ -114,11 +116,139 @@ class ReservaController extends Controller {
         return response()->json($data, $data['code']);
     }
 
-    private function enviarCorreoReserva($reserva){
-        $array_reserva = json_decode($reserva,true);
-        Mail::send('email.reservaInstrumentos',$array_reserva, function($msj) {
-            $msj->from("kaizer450450@gmail.com","Reservas Poli");
-            $msj->subject('Correo Prueba');
+    public function reservasAprobadas() {
+        $instrumentos = Reserva::join('instrumentos', 'instrumentos.id', '=', 'reservas.id_instrumento')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'APROBADA')
+            ->select('reservas.id', 'instrumentos.placa', 'instrumentos.nombre as instrumento', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $salones = Reserva::join('salones', 'salones.id', '=', 'reservas.id_salon')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'APROBADA')
+            ->select('reservas.id', 'salones.ubicacion', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $equipos = Reserva::join('equipos', 'equipos.id', '=', 'reservas.id_equipo')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'APROBADA')
+            ->select('reservas.id', 'equipos.placa', 'equipos.nombre', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $data = [
+            'code' => 200,
+            'status' => 'success',
+            'instrumentos' => $instrumentos,
+            'salones' => $salones,
+            'equipos' => $equipos
+        ];
+
+        return response()->json($data, $data['code']);
+    }
+
+    public function reservasActivas() {
+        $instrumentos = Reserva::join('instrumentos', 'instrumentos.id', '=', 'reservas.id_instrumento')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'ACTIVA')
+            ->select('reservas.id', 'instrumentos.placa', 'instrumentos.nombre as instrumento', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $salones = Reserva::join('salones', 'salones.id', '=', 'reservas.id_salon')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'ACTIVA')
+            ->select('reservas.id', 'salones.ubicacion', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $equipos = Reserva::join('equipos', 'equipos.id', '=', 'reservas.id_equipo')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'ACTIVA')
+            ->select('reservas.id', 'equipos.placa', 'equipos.nombre', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $data = [
+            'code' => 200,
+            'status' => 'success',
+            'instrumentos' => $instrumentos,
+            'salones' => $salones,
+            'equipos' => $equipos
+        ];
+
+        return response()->json($data, $data['code']);
+    }
+
+    public function reservasPendientes() {
+        $instrumentos = Reserva::join('instrumentos', 'instrumentos.id', '=', 'reservas.id_instrumento')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'PENDIENTE')
+            ->select('reservas.id', 'instrumentos.placa', 'instrumentos.nombre as instrumento', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $salones = Reserva::join('salones', 'salones.id', '=', 'reservas.id_salon')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'PENDIENTE')
+            ->select('reservas.id', 'salones.ubicacion', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $equipos = Reserva::join('equipos', 'equipos.id', '=', 'reservas.id_equipo')
+            ->join('usuarios', 'usuarios.id', '=', 'reservas.id_usuario')
+            ->where('reservas.estado', 'PENDIENTE')
+            ->select('reservas.id', 'equipos.placa', 'equipos.nombre', 'usuarios.nombre', 'usuarios.apellido',
+                'usuarios.tipo_documento', 'usuarios.numero_documento')->get();
+
+        $data = [
+            'code' => 200,
+            'status' => 'success',
+            'instrumentos' => $instrumentos,
+            'salones' => $salones,
+            'equipos' => $equipos
+        ];
+
+        return response()->json($data, $data['code']);
+    }
+
+    public function activarReserva(Request $request) {
+        $json = $request->getContent();
+        $params = json_decode($json);
+        $params_array = json_decode($json, true);
+
+        $data = array(
+            'code' => 400,
+            'status' => 'error',
+            'message' => "No se pudo activar la reserva"
+        );
+
+        if (!empty($params_array)) {
+            $validate = \Validator::make($params_array, [
+                'id' => 'required',
+            ]);
+
+            if ($validate->fails()) {
+                $data['errors'] = $validate->errors();
+                return response()->json($data, $data['code']);
+            }
+
+            unset($params_array['id']);
+            $reserva = Reserva::find($params->id);
+            if (!empty($reserva) && is_object($reserva)) {
+                $reserva->update($params_array);
+                $data = array(
+                    'code' => 200,
+                    'status' => 'sucess',
+                    'reserva' => $reserva,
+                    'cambios' => $params_array
+                );
+            }
+        }
+        return response()->json($data, $data['code']);
+    }
+
+    private function enviarCorreoReserva($reserva, $tipo_item, $item) {
+        //$reserva->push();
+        $array_reserva = json_decode($reserva, true);
+        //var_dump($array_reserva);die();
+        Mail::send('email.reservaInstrumentos', $array_reserva, function ($msj) {
+            $msj->from("kaizer450450@gmail.com", "Reservas Fomento Poli");
+            $msj->subject('Información de su reserva');
             $msj->to('gabrieljaime09@gmail.com');
         });
     }

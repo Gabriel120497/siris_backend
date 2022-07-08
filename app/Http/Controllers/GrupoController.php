@@ -141,8 +141,6 @@ class GrupoController extends Controller {
                 'message' => 'El grupo no existe'
             ];
         }
-
-
         return response()->json($data, $data['code']);
     }
 
