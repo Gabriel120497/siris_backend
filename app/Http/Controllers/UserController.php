@@ -6,6 +6,7 @@ use App\Usuario;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller {
 
@@ -92,7 +93,14 @@ class UserController extends Controller {
                     'message' => $validate->errors()
                 ];
             } else {
-                $pwd = str_random(8);
+                $enviar_correo = false;
+                if (empty($params->clave)) {
+                    $pwd = str_random(8);
+                    $enviar_correo = true;
+                } else {
+                    $pwd = $params->clave;
+                }
+
                 $jwt = JWT::encode($pwd, $this->key, 'HS256');
                 $usuario = new Usuario();
                 $usuario->rol = $params->rol;
@@ -104,6 +112,11 @@ class UserController extends Controller {
                 $usuario->correo = $params->correo;
                 $usuario->clave = $jwt;
                 $usuario->save();
+
+                if ($enviar_correo) {
+                    $this->enviarCorreoPwd($usuario);
+                }
+
                 unset($usuario->clave);
                 $data = [
                     'code' => 200,
@@ -122,55 +135,18 @@ class UserController extends Controller {
         return response()->json($data, $data['code']);
     }
 
-    public function enviarCorreoPwd(Request $request) {
-        $json = $request->getContent();
-
-        $params = json_decode($json);
-        $params_array = json_decode($json, true);
-
-        if (!empty($params_array)) {
-            $validate = \Validator::make($params_array, [
-                'tipo_documento' => 'required',
-                'numero_documento' => 'required',
-                'correo' => 'required'
-            ]);
-
-            if ($validate->fails()) {
-                $data = [
-                    'code' => 400,
-                    'status' => 'error',
-                    'message' => $validate->errors()
-                ];
-            } else {
-                $usuario = Usuario::where('usuarios.tipo_documento', '=', $params_array['tipo_documento'])
-                    ->where('usuarios.numero_documento', '=', $params_array['numero_documento'])
-                    ->where('usuarios.correo', '=', $params_array['correo'])->select('clave')->get();
-                //print_r($usuario);
-                //die();
-                if (!empty($usuario)) {
-                    $clave = JWT::decode($usuario[0]->clave, $this->key, ['HS256']);
-                    $data = [
-                        'code' => 200,
-                        'status' => 'success',
-                        'clave' => $clave
-                    ];
-                } else {
-                    $data = [
-                        'code' => 400,
-                        'status' => 'error',
-                        'message' => 'El usuario no existe'
-                    ];
-                }
-            }
-        } else {
-            $data = [
-                'code' => 400,
-                'status' => 'error',
-                'message' => 'No se ha creado el usuario. Faltan datos'
-            ];
-        }
-        return response()->json($data, $data['code']);
+    public function enviarCorreoPwd($usuario) {
+        $clave = JWT::decode($usuario->clave, $this->key, ['HS256']);
+        $usuario->clave = $clave;
+        $array_usuario = json_decode($usuario, true);
+        //var_dump($array_reserva);die();
+        Mail::send('email.nuevoColaborador', $array_usuario, function ($msj) use ($usuario) {
+            $msj->from("kaizer450450@gmail.com", "Registro Usuario Fomento Poli");
+            $msj->subject('Información de su perfil');
+            $msj->to($usuario->correo);
+        });
     }
+
 
     public function profesores() {
         $profesores = Usuario::where('rol', '=', 'Profesor')

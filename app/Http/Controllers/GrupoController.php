@@ -55,6 +55,7 @@ class GrupoController extends Controller {
                 $grupo->profesor = $params->profesor;
                 $grupo->cupos_totales = $params->cupos_totales;
                 $grupo->cupos_restantes = $params->cupos_restantes;
+                $grupo->prerequisitos = $params->prerequisitos;
                 $grupo->horario = json_encode($horario, true);
                 $grupo->id_salon_clases = $params->id_salon_clases;
                 $grupo->save();

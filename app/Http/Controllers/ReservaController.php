@@ -88,6 +88,7 @@ class ReservaController extends Controller {
                     $reserva->fecha_inicio = $params->fecha_inicio;
                     $reserva->fecha_fin = $params->fecha_fin;
                     $reserva->save();
+                    $reserva->correo = $params->correo;
                     $idItemReq = null;
                     $data = [
                         'code' => 200,
@@ -245,11 +246,11 @@ class ReservaController extends Controller {
     private function enviarCorreoReserva($reserva, $tipo_item, $item) {
         //$reserva->push();
         $array_reserva = json_decode($reserva, true);
-        //var_dump($array_reserva);die();
-        Mail::send('email.reservaInstrumentos', $array_reserva, function ($msj) {
+        //var_dump($reserva->correo);die();
+        Mail::send('email.reservaInstrumentos', $array_reserva, function ($msj) use ($reserva) {
             $msj->from("kaizer450450@gmail.com", "Reservas Fomento Poli");
             $msj->subject('Información de su reserva');
-            $msj->to('gabrieljaime09@gmail.com');
+            $msj->to($reserva->correo);
         });
     }
 
