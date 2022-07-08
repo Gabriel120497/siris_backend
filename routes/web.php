@@ -23,6 +23,9 @@ Route::post('api/usuario/update', 'UserController@update');
 Route::post('api/usuario/nuevoUsuario', 'UserController@nuevoUsuario');
 Route::post('api/usuario/enviarCorreoPwd', 'UserController@enviarCorreoPwd');
 Route::get('api/usuario/profesores', 'UserController@profesores');
+Route::get('api/usuario/colaboradores', 'UserController@colaboradores');
+Route::put('api/usuario/editarColaborador', 'UserController@editarColaborador');
+Route::delete('api/usuario/eliminarColaborador/{id_colaborador}', 'UserController@eliminarColaborador');
 
 //rutas reservas
 Route::get('api/reservas', 'ReservaController@reservas');

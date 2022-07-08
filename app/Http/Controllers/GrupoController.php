@@ -104,7 +104,7 @@ class GrupoController extends Controller {
         $mis_grupos = Grupo::join('salones', 'salones.id', '=', 'grupos.id_salon_clases')
             ->select('grupos.id', 'grupos.nombre', 'grupos.descripcion', 'grupos.cupos_totales',
                 'grupos.cupos_restantes', 'grupos.prerequisitos', 'grupos.horario', 'salones.ubicacion')
-            ->where('grupos.profesor', '=', $profesor)->get();
+            ->where('grupos.profesor', '=', str_replace('-', ' ', $profesor))->get();
 
         if (count($mis_grupos)) {
             foreach ($mis_grupos as &$grupo) {

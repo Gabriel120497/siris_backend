@@ -85,7 +85,6 @@ class UserController extends Controller {
                 'celular' => 'required',
                 'correo' => 'required'
             ]);
-
             if ($validate->fails()) {
                 $data = [
                     'code' => 400,
@@ -166,6 +165,84 @@ class UserController extends Controller {
                 'status' => 'error',
                 'message' => 'No hay profesores'
             );
+        }
+        return response()->json($data, $data['code']);
+    }
+
+    public function colaboradores() {
+        $colaboradores = Usuario::where('rol', '!=', 'Comunidad')->where('rol', '!=', 'Externo')
+            ->select('id', 'nombre', 'apellido', 'celular', 'correo', 'rol')
+            ->get();
+        /*dd($profesores);
+        die();*/
+        if (!empty($colaboradores)) {
+            $data = array(
+                'code' => 200,
+                'status' => 'sucess',
+                'colaboradores' => $colaboradores
+            );
+        } else {
+            $data = array(
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'No hay colaboradores'
+            );
+        }
+        return response()->json($data, $data['code']);
+    }
+
+    public function editarColaborador(Request $request) {
+        $json = $request->getContent();
+        $params = json_decode($json);
+        $params_array = json_decode($json, true);
+
+        $data = array(
+            'code' => 400,
+            'status' => 'error',
+            'message' => "No se pudo activar la reserva"
+        );
+
+        if (!empty($params_array)) {
+            $validate = \Validator::make($params_array, [
+                'id' => 'required',
+            ]);
+
+            if ($validate->fails()) {
+                $data['errors'] = $validate->errors();
+                return response()->json($data, $data['code']);
+            }
+
+            unset($params_array['id']);
+            $colaborador = Usuario::find($params->id);
+            if (!empty($colaboradot) && is_object($colaborador)) {
+                $colaboradot->update($params_array);
+                $data = array(
+                    'code' => 200,
+                    'status' => 'sucess',
+                    'colaborador' => $colaborador,
+                    'cambios' => $params_array
+                );
+            }
+        }
+        return response()->json($data, $data['code']);
+    }
+
+    public function eliminarColaborador($id_colaborador) {
+        $colaborador = Usuario::find($id_colaborador);
+        if (!empty($colaborador)) {
+            $colaborador->delete();
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'colaborador' => $colaborador
+            ];
+
+        } else {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'El usuario no existe'
+            ];
         }
         return response()->json($data, $data['code']);
     }

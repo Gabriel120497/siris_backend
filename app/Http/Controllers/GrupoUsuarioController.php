@@ -4,9 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Grupo;
 use App\Grupo_Usuario;
+use App\Usuario;
+use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 
 class GrupoUsuarioController extends Controller {
+
+    public $key;
+
+    public function __construct() {
+        $this->key = 'C9fBxl1EWtYTL1/M8jfstw==';
+    }
 
     public function audiciones() {
         $audiciones = Grupo_Usuario::join('grupos', 'grupos_usuarios.id_grupo', '=', 'grupos.id')
@@ -27,7 +35,7 @@ class GrupoUsuarioController extends Controller {
         $audicionesPendientes = Grupo_Usuario::join('grupos', 'grupos_usuarios.id_grupo', '=', 'grupos.id')
             ->join('usuarios', 'grupos_usuarios.id_usuario', '=', 'usuarios.id')
             ->select('grupos_usuarios.id', 'grupos_usuarios.estado_usuario',
-                'grupos.nombre as grupo', 'usuarios.nombre', 'usuarios.apellido', 'usuarios.correo',
+                'grupos.nombre as grupo', 'grupos_usuarios.id_grupo', 'usuarios.id as id_usuario', 'usuarios.nombre', 'usuarios.apellido', 'usuarios.correo',
                 'usuarios.celular')
             ->where('grupos_usuarios.estado_usuario', '=', 'Pendiente')
             ->where('grupos.profesor', '=', $profesor)->get();
@@ -57,9 +65,9 @@ class GrupoUsuarioController extends Controller {
 
         if (!empty($params_array)) {
             $validate = \Validator::make($params_array, [
-                'id_usuario' => 'required',
-                'id_grupo' => 'required',
-                'estado_usuario' => 'required'
+                'tipo_documento' => 'required',
+                'numero_documento' => 'required',
+                'id_grupo' => 'required'
             ]);
 
             if ($validate->fails()) {
@@ -69,10 +77,28 @@ class GrupoUsuarioController extends Controller {
                     'message' => $validate->errors()
                 ];
             } else {
+                $usuario = Usuario::where('tipo_documento', $params->tipo_documento)
+                    ->where('numero_documento', $params->numero_documento)->first();
+                $usuario_nuevo='';
+                if (empty($usuario)) {
+                    $request_nuevo = [
+                        'rol' => 'Externo',
+                        'nombre' => $params->nombre,
+                        'apellido' => $params->apellido,
+                        'tipo_documento' => $params->tipo_documento,
+                        'numero_documento' => $params->numero_documento,
+                        'celular' => $params->celular,
+                        'correo' => $params->correo
+                    ];
+                    $usuario_nuevo = $this->nuevoUsuario($request_nuevo);//TODO Crear el usuario
+                }
+
+                $usuario = Usuario::where('tipo_documento', $params->tipo_documento)
+                    ->where('numero_documento', $params->numero_documento)->first();
                 $audicion = new Grupo_Usuario();
-                $audicion->id_usuario = $params->id_usuario;
+                $audicion->id_usuario = $usuario->id;
                 $audicion->id_grupo = $params->id_grupo;
-                $audicion->estado_usuario = $params->estado_usuario;
+                $audicion->estado_usuario = 'PENDIENTE';
                 $audicion->save();
 
                 $data = [
@@ -106,8 +132,6 @@ class GrupoUsuarioController extends Controller {
         if (!empty($params_array)) {
             $validate = \Validator::make($params_array, [
                 'solicitud' => 'required',
-                'id_grupo' => 'required',
-                'id_usuario' => 'required',
                 'estado_usuario' => 'required'
             ]);
 
@@ -117,14 +141,10 @@ class GrupoUsuarioController extends Controller {
             }
 
             unset($params_array['solicitud']);
-            unset($params_array['id_usuario']);
-            unset($params_array['id_grupo']);
-            $audicion = Grupo_Usuario::where('id', $params->solicitud)
-                ->where('grupos_usuarios.id_grupo', $params->id_grupo)
-                ->first();
+            $audicion = Grupo_Usuario::find($params->solicitud);
             if (!empty($audicion) && is_object($audicion)) {
                 $audicion->update($params_array);
-                if ($params->estado_usuario == 'Integrante') {
+                if ($params->estado_usuario == 'INTEGRANTE') {
                     $grupo = Grupo::where('id', $params->id_grupo)->first();
                     if ($grupo->cupos_restantes > 0) {
                         $grupoArray = [
@@ -136,15 +156,85 @@ class GrupoUsuarioController extends Controller {
                             'status' => 'sucess',
                             'audicion' => $grupo
                         );
-                    } else {
-                        $data['message'] = 'El grupo no tiene mas cupos disponibles';
-                    }
+                    } else if ($params->estado_usuario == 'RECHAZADO') {
 
+                        //TODO Eliminar el usuario si no pertenece a ningun otro grupo y el perfil es externo
+                    }
+                    $data['message'] = 'El grupo no tiene mas cupos disponibles';
+
+                } else {
                 }
             } else {
-                $data['message'] = $data['message'] . ', el usuario no ha audicionado para este grupo';
+                $data['message'] = 'El usuario no ha audicionado para este grupo';
             }
         }
         return response()->json($data, $data['code']);
     }
+
+    public function nuevoUsuario($request) {
+        //$json = $request->getContent();
+
+        //$params = json_decode($request);
+        //$params_array = json_decode($request, true);
+
+        if (!empty($request)) {
+            $validate = \Validator::make($request, [
+                'rol' => 'required',
+                'nombre' => 'required',
+                'apellido' => 'required',
+                'tipo_documento' => 'required',
+                'numero_documento' => 'required|unique:usuarios',
+                'celular' => 'required',
+                'correo' => 'required'
+            ]);
+            if ($validate->fails()) {
+                $data = [
+                    'code' => 400,
+                    'status' => 'error',
+                    'message' => $validate->errors()
+                ];
+            } else {
+                $enviar_correo = false;
+                if (empty($request->clave)) {
+                    $pwd = str_random(8);
+                    $enviar_correo = true;
+                } else {
+                    $pwd = $request->clave;
+                }
+
+                $jwt = JWT::encode($pwd, $this->key, 'HS256');
+                $usuario = new Usuario();
+                $usuario->rol = $request['rol'];
+                $usuario->nombre = $request['nombre'];
+                $usuario->apellido = $request['apellido'];
+                $usuario->tipo_documento = $request['tipo_documento'];
+                $usuario->numero_documento = $request['numero_documento'];
+                $usuario->celular = $request['celular'];
+                $usuario->correo = $request['correo'];
+                $usuario->clave = $jwt;
+                $usuario->save();
+
+                if ($enviar_correo) {
+                    $correo = new UserController();
+                    $correo->enviarCorreoPwd($usuario);
+                }
+
+                unset($usuario->clave);
+                $data = [
+                    'code' => 200,
+                    'status' => 'success',
+                    'usuario' => $usuario,
+                    'borrar' => $pwd
+                ];
+            }
+        } else {
+            $data = [
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'No se ha creado el usuario. Faltan datos'
+            ];
+        }
+        return $usuario;
+    }
+
 }
