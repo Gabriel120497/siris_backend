@@ -199,7 +199,7 @@ class UserController extends Controller {
         $data = array(
             'code' => 400,
             'status' => 'error',
-            'message' => "No se pudo activar la reserva"
+            'message' => "No se pudo editar el colaborador"
         );
 
         if (!empty($params_array)) {
@@ -212,15 +212,22 @@ class UserController extends Controller {
                 return response()->json($data, $data['code']);
             }
 
-            unset($params_array['id']);
             $colaborador = Usuario::find($params->id);
-            if (!empty($colaboradot) && is_object($colaborador)) {
-                $colaboradot->update($params_array);
+            //dd($colaborador);die();
+            unset($params_array['id']);
+            if (!empty($colaborador) && is_object($colaborador)) {
+                $colaborador->update($params_array);
                 $data = array(
                     'code' => 200,
                     'status' => 'sucess',
                     'colaborador' => $colaborador,
                     'cambios' => $params_array
+                );
+            }else{
+                $data = array(
+                    'code' => 400,
+                    'status' => 'error',
+                    'message' => "No se encontró el colaborador"
                 );
             }
         }
