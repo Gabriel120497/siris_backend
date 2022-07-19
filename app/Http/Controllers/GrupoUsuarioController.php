@@ -77,9 +77,11 @@ class GrupoUsuarioController extends Controller {
                     'message' => $validate->errors()
                 ];
             } else {
+
                 $usuario = Usuario::where('tipo_documento', $params->tipo_documento)
                     ->where('numero_documento', $params->numero_documento)->first();
-                $usuario_nuevo='';
+
+                $usuario_nuevo = '';
                 if (empty($usuario)) {
                     $request_nuevo = [
                         'rol' => 'Externo',
@@ -151,19 +153,26 @@ class GrupoUsuarioController extends Controller {
                             'cupos_restantes' => $grupo->cupos_restantes - 1
                         ];
                         $grupo->update($grupoArray);
+                    } else {
+                        $data['message'] = 'El grupo no tiene mas cupos disponibles';
+                    }/* else if ($params->estado_usuario == 'RECHAZADO') {
+
+                        //TODO Eliminar el usuario si no pertenece a ningun otro grupo y el perfil es externo
+                        $grupo->update($grupoArray);
                         $data = array(
                             'code' => 200,
                             'status' => 'sucess',
                             'audicion' => $grupo
                         );
-                    } else if ($params->estado_usuario == 'RECHAZADO') {
+                    }*/
 
-                        //TODO Eliminar el usuario si no pertenece a ningun otro grupo y el perfil es externo
-                    }
-                    $data['message'] = 'El grupo no tiene mas cupos disponibles';
 
-                } else {
                 }
+                $data = array(
+                    'code' => 200,
+                    'status' => 'sucess',
+                    'audicion' => 'Se ha actualizado con éxito'
+                );
             } else {
                 $data['message'] = 'El usuario no ha audicionado para este grupo';
             }
